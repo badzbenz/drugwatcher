@@ -58,8 +58,9 @@ body{font-family:'Sarabun',sans-serif;background:#f0f0f7;color:#1a1a2e;font-size
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 
 /* ===== LOGIN ===== */
-.login-bg{position:fixed;inset:0;background:linear-gradient(160deg,#4F46E5 0%,#7C3AED 50%,#EC4899 100%)}
-.login-card{position:relative;background:#fff;border-radius:24px 24px 0 0;padding:32px 24px;position:fixed;bottom:0;left:0;right:0;box-shadow:0 -8px 40px rgba(0,0,0,.2)}
+.login-bg{display:none}
+.login-card{background:linear-gradient(160deg,#4F46E5 0%,#7C3AED 50%,#EC4899 100%);border-radius:0;padding:0;position:fixed;inset:0;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.login-inner{background:#fff;border-radius:24px;margin:24px;padding:32px 28px 40px 28px;width:calc(100% - 48px);max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.2)}
 .login-icon{text-align:center;font-size:48px;margin-bottom:8px}
 .login-title{text-align:center;font-size:22px;font-weight:700;color:#4F46E5}
 .login-sub{text-align:center;color:#6b7280;font-size:13px;margin-bottom:24px}
@@ -283,19 +284,30 @@ body { padding-top: 0; }
 
   <!-- Login -->
   <div id="login-screen" class="screen hidden">
-    <div class="login-bg"></div>
     <div class="login-card">
-      <div class="login-icon">🏥</div>
-      <h1 class="login-title">The Watcher</h1>
-      <p class="login-sub">ระบบแจ้งเตือนวันหมดอายุของยา</p>
-      <div class="form-group">
-        <input type="text" id="login-user" placeholder="ชื่อผู้ใช้" class="input" autocomplete="username">
+      <div class="login-inner">
+        <!-- โลโก้ -->
+        <div style="text-align:center;margin-bottom:32px">
+          <div style="font-size:64px;margin-bottom:12px">🏥</div>
+          <h1 class="login-title">The Watcher</h1>
+          <p class="login-sub">ระบบแจ้งเตือนวันหมดอายุของยา</p>
+        </div>
+        <!-- ฟอร์ม -->
+        <div class="form-group">
+          <input type="text" id="login-user" placeholder="ชื่อผู้ใช้" class="input"
+            autocomplete="username" style="font-size:17px;padding:14px">
+        </div>
+        <div class="form-group">
+          <input type="password" id="login-pass" placeholder="รหัสผ่าน" class="input"
+            autocomplete="current-password" style="font-size:17px;padding:14px"
+            onkeydown="if(event.key==='Enter') doLogin()">
+        </div>
+        <div id="login-error" class="error-msg hidden"></div>
+        <button onclick="doLogin()" class="btn btn-primary btn-full"
+          style="padding:16px;font-size:17px;margin-top:8px">
+          เข้าสู่ระบบ
+        </button>
       </div>
-      <div class="form-group">
-        <input type="password" id="login-pass" placeholder="รหัสผ่าน" class="input" autocomplete="current-password">
-      </div>
-      <div id="login-error" class="error-msg hidden"></div>
-      <button onclick="doLogin()" class="btn btn-primary btn-full">เข้าสู่ระบบ</button>
     </div>
   </div>
 
@@ -788,7 +800,7 @@ body { padding-top: 0; }
 // ============================================================
 const CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbztgz-3_22uL7SVQzooMhqBvP8pT0lX20JlleZwbY8LfySqPX-LzmK1xxeJujosZuX9Rg/exec'
-  // ตัวอย่าง: 'https://script.google.com/macros/s/AKfycbztgz-3_22uL7SVQzooMhqBvP8pT0lX20JlleZwbY8LfySqPX-LzmK1xxeJujosZuX9Rg/exec'
+  // ตัวอย่าง: 'https://script.google.com/macros/s/AKfy.../exec'
 };
 // ============================================================
 
