@@ -799,7 +799,7 @@ body { padding-top: 0; }
 // ⚙️  ตั้งค่า: วาง URL ของ Google Apps Script ที่นี่
 // ============================================================
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbztgz-3_22uL7SVQzooMhqBvP8pT0lX20JlleZwbY8LfySqPX-LzmK1xxeJujosZuX9Rg/exec'
+  GAS_URL: 'YOUR_GAS_URL_HERE'
   // ตัวอย่าง: 'https://script.google.com/macros/s/AKfy.../exec'
 };
 // ============================================================
@@ -1623,19 +1623,17 @@ function openScannerForField(fieldId) {
 }
 
 async function startScanner() {
-  // iOS: getUserMedia ถูก block ใน GAS iframe เสมอ → ใช้ถ่ายภาพ
-  if (isIOS()) { usePhotoCamera(); return; }
-
-  // Android/Desktop: ลอง live video ก่อน → ถ้าไม่ได้ fallback ถ่ายภาพ
+  // GitHub Pages: ไม่มี iframe → iOS + Android ใช้กล้อง live ได้เลย!
   try {
     if (!navigator.mediaDevices?.getUserMedia) throw new Error('no getUserMedia');
-    // ทดสอบเบาๆ ก่อนเปิด modal
-    const test = await navigator.mediaDevices.getUserMedia({ video: {facingMode:'environment'} });
+    const test = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
     test.getTracks().forEach(t => t.stop());
-    openVideoScanner(); // Android live scan
+    openVideoScanner(); // 🎉 Live scan works on iOS Safari (GitHub Pages)
   } catch(e) {
-    usePhotoCamera(); // Android fallback (เช่น browser ไม่รองรับ)
+    console.warn('Camera not available:', e.message);
+    usePhotoCamera(); // fallback
   }
+}
 }
 
 // ===== Live Video Scanner — Android / Desktop =====
