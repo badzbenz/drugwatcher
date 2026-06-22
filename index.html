@@ -1757,22 +1757,45 @@ async function openVideoScanner() {
     document.getElementById('scanner-status').textContent = '🔍 จ่อบาร์โค้ดให้อยู่ในกรอบ';
     startDecoding(video);
   } catch(e) {
-    closeScanner();
-    setTimeout(() => usePhotoCamera(), 300);
+    console.error('openVideoScanner error:', e);
+    document.getElementById('scanner-status').textContent = '❌ ' + e.message;
+    setTimeout(() => {
+      closeScanner();
+      usePhotoCamera();
+    }, 1500);
   }
 }
 
-function startDecoding(video) {
-  const codeReader = new ZXing.BrowserMultiFormatReader();
-  state.scannerReader = codeReader;
-  codeReader.decodeFromVideoElement(video, (result, error) => {
-    if (result) {
-      const code = result.getText();
-      document.getElementById('scanner-status').textContent = '✓ พบ: ' + code;
-      navigator.vibrate?.(200);
-      setTimeout(() => { closeScanner(); handleScanResult(code); }, 400);
-    }
-  });
+async function startDecoding(video) {
+  // รอ ZXing โหลดเสร็จ (async script อาจยังไม่พร้อม)
+  document.getElementById('scanner-status').textContent = 'กำลังโหลด scanner...';
+  let waited = 0;
+  while (typeof ZXing === 'undefined' && waited < 30) {
+    await new Promise(r => setTimeout(r, 200));
+    waited++;
+  }
+  if (typeof ZXing === 'undefined') {
+    showToast('โหลด scanner ไม่สำเร็จ — ลองใหม่','error');
+    setTimeout(closeScanner, 1500);
+    return;
+  }
+  document.getElementById('scanner-status').textContent = '🔍 จ่อบาร์โค้ดในกรอบ';
+  try {
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    state.scannerReader = codeReader;
+    codeReader.decodeFromVideoElement(video, (result, error) => {
+      if (result) {
+        const code = result.getText();
+        document.getElementById('scanner-status').textContent = '✓ พบ: ' + code;
+        navigator.vibrate?.(200);
+        setTimeout(() => { closeScanner(); handleScanResult(code); }, 400);
+      }
+    });
+  } catch(e) {
+    console.error('startDecoding:', e);
+    closeScanner();
+    showToast('scanner: ' + e.message,'error');
+  }
 }
 
 function closeScanner() {
