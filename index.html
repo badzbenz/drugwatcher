@@ -8,10 +8,44 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>The Watcher — ระบบแจ้งเตือนยา</title>
 
-<!-- ZXing: Live barcode scanning -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.20.0/index.min.js"></script>
-<!-- Quagga2: 1D barcode from photo -->
-<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+<!-- ZXing + Quagga2: โหลดแบบ async ไม่บล็อก window.onload -->
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.20.0/index.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+
+<!-- Safety: บังคับซ่อน loading ด้วย CSS ถ้า JS ทำงานไม่ได้ -->
+<style>
+@keyframes forceHide {
+  to { visibility:hidden; opacity:0; pointer-events:none; }
+}
+#loading-screen {
+  animation: forceHide 0.3s 5s forwards;
+}
+</style>
+
+<!-- ✅ Inline safety script: ทำงานก่อน window.onload -->
+<script>
+(function() {
+  var TIMEOUT = 4500;
+  function forceHideLoader() {
+    var loader = document.getElementById('loading-screen');
+    var login  = document.getElementById('login-screen');
+    if (!loader) return;
+    loader.style.display = 'none';
+    if (login && !document.getElementById('main-app')?.offsetParent) {
+      login.classList.remove('hidden');
+      login.style.display = '';
+    }
+  }
+  // ทำงานทันทีที่ DOM พร้อม ไม่รอ external scripts
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(forceHideLoader, TIMEOUT);
+    });
+  } else {
+    setTimeout(forceHideLoader, TIMEOUT);
+  }
+})();
+</script>
 
 <style>
 /* ===== RESET & BASE ===== */
@@ -799,7 +833,7 @@ body { padding-top: 0; }
 // ⚙️  ตั้งค่า: วาง URL ของ Google Apps Script ที่นี่
 // ============================================================
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbztgz-3_22uL7SVQzooMhqBvP8pT0lX20JlleZwbY8LfySqPX-LzmK1xxeJujosZuX9Rg/exec'
+  GAS_URL: 'YOUR_GAS_URL_HERE'
   // ตัวอย่าง: 'https://script.google.com/macros/s/AKfy.../exec'
 };
 // ============================================================
@@ -843,7 +877,7 @@ window.onerror = (msg, src, line) => {
   }
 };
 
-window.onload = async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (state.darkMode) document.documentElement.classList.add('dark');
 
   // ตรวจสอบว่าตั้งค่า GAS URL แล้วหรือยัง
@@ -863,7 +897,7 @@ window.onload = async () => {
       document.getElementById('login-screen').classList.remove('hidden');
     }
   }, 1200);
-};
+});
 
 function showSetupAlert() {
   document.getElementById('login-screen').classList.remove('hidden');
@@ -1775,7 +1809,7 @@ async function decodeFromPhotoFile(file) {
   const sizes  = [900, 1200, 600];
 
   // ===== รอบ 1: Quagga2 — ดีที่สุดสำหรับ EAN-13, Code128, Code39 =====
-  if (typeof Quagga !== 'undefined') {
+  if (typeof Quagga !== 'undefined' && Quagga) {
     for (const sz of sizes) {
       const c   = makeCanvas(img, sz);
       const url = c.toDataURL('image/jpeg', 0.90);
@@ -1852,7 +1886,8 @@ function zxingDecode(dataUrl) {
     img.style.cssText = 'position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:-9999px';
     document.body.appendChild(img);
     img.onload = () => {
-      const reader = new ZXing.BrowserMultiFormatReader();
+      if (typeof ZXing === 'undefined') throw new Error('ZXing not loaded');
+  const reader = new ZXing.BrowserMultiFormatReader();
       reader.decodeFromImageUrl(dataUrl)
         .then(r => { document.body.removeChild(img); resolve(r.getText()); })
         .catch(e => { try{document.body.removeChild(img);}catch(x){} reject(e); });
