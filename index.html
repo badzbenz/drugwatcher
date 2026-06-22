@@ -825,8 +825,36 @@ let state = {
 };
 
 // ===== INIT =====
+// ===== Safety: บังคับซ่อน loading ไม่เกิน 4 วินาที =====
+setTimeout(() => {
+  const el = document.getElementById('loading-screen');
+  if (el && !el.classList.contains('hidden')) {
+    el.classList.add('hidden');
+    document.getElementById('login-screen')?.classList.remove('hidden');
+  }
+}, 4000);
+
+window.onerror = (msg, src, line) => {
+  console.error('JS Error:', msg, 'line:', line);
+  const el = document.getElementById('loading-screen');
+  if (el && !el.classList.contains('hidden')) {
+    el.classList.add('hidden');
+    document.getElementById('login-screen')?.classList.remove('hidden');
+  }
+};
+
 window.onload = async () => {
   if (state.darkMode) document.documentElement.classList.add('dark');
+
+  // ตรวจสอบว่าตั้งค่า GAS URL แล้วหรือยัง
+  if (!CONFIG.GAS_URL || CONFIG.GAS_URL === 'YOUR_GAS_URL_HERE') {
+    setTimeout(() => {
+      document.getElementById('loading-screen').classList.add('hidden');
+      showSetupAlert();
+    }, 800);
+    return;
+  }
+
   setTimeout(async () => {
     document.getElementById('loading-screen').classList.add('hidden');
     if (state.token && state.user) {
@@ -836,6 +864,13 @@ window.onload = async () => {
     }
   }, 1200);
 };
+
+function showSetupAlert() {
+  document.getElementById('login-screen').classList.remove('hidden');
+  const err = document.getElementById('login-error');
+  err.innerHTML = '⚠️ ยังไม่ได้ตั้งค่า GAS URL<br><small>กรุณาแก้ไข <b>YOUR_GAS_URL_HERE</b> ในไฟล์ index.html บน GitHub</small>';
+  err.classList.remove('hidden');
+}
 
 async function initApp() {
   document.getElementById('login-screen').classList.add('hidden');
@@ -847,21 +882,33 @@ async function initApp() {
 async function loadAll() {
   showLoading(true);
   try {
-    const [settings, drugs, locations] = await Promise.all([
-      call('getSettings'),
-      call('getDrugs'),
-      call('getLocations'),
+    // Timeout 15 วินาที ป้องกัน hang
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 15000));
+
+    const [settings, drugs, locations] = await Promise.race([
+      Promise.all([call('getSettings'), call('getDrugs'), call('getLocations')]),
+      timeout
     ]);
-    state.settings = settings;
-    state.drugs    = drugs;
-    state.locations = locations;
+
+    state.settings  = settings  || {};
+    state.drugs     = drugs     || [];
+    state.locations = locations || [];
     applyHospitalInfo();
-    // Init today dates for export
+
     const today = toDateInput(new Date());
     const fromEl = document.getElementById('export-from');
     const toEl   = document.getElementById('export-to');
     if (fromEl) { fromEl.value = today; toEl.value = today; }
-  } catch(e) { showToast('โหลดข้อมูลไม่สำเร็จ','error'); }
+
+  } catch(e) {
+    console.error('loadAll error:', e);
+    if (e.message === 'timeout') {
+      showToast('เชื่อมต่อ GAS ไม่ได้ — ตรวจสอบ URL และ Deploy อีกครั้ง','error');
+    } else {
+      showToast('โหลดข้อมูลไม่สำเร็จ: ' + e.message,'error');
+    }
+  }
   showLoading(false);
 }
 
