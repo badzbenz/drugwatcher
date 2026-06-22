@@ -885,7 +885,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (state.darkMode) document.documentElement.classList.add('dark');
 
   // ตรวจสอบว่าตั้งค่า GAS URL แล้วหรือยัง
-  if (!CONFIG.GAS_URL || CONFIG.GAS_URL === 'https://script.google.com/macros/s/AKfycbztgz-3_22uL7SVQzooMhqBvP8pT0lX20JlleZwbY8LfySqPX-LzmK1xxeJujosZuX9Rg/exec') {
+  if (!CONFIG.GAS_URL || CONFIG.GAS_URL === 'YOUR_GAS_URL_HERE') {
     setTimeout(() => {
       document.getElementById('loading-screen').classList.add('hidden');
       showSetupAlert();
@@ -922,7 +922,7 @@ async function testConnection() {
 function showSetupAlert() {
   document.getElementById('login-screen').classList.remove('hidden');
   const err = document.getElementById('login-error');
-  err.innerHTML = '⚠️ ยังไม่ได้ตั้งค่า GAS URL<br><small>กรุณาแก้ไข <b>https://script.google.com/macros/s/AKfycbztgz-3_22uL7SVQzooMhqBvP8pT0lX20JlleZwbY8LfySqPX-LzmK1xxeJujosZuX9Rg/exec</b> ในไฟล์ index.html บน GitHub</small>';
+  err.innerHTML = '⚠️ ยังไม่ได้ตั้งค่า GAS URL<br><small>กรุณาแก้ไข <b>YOUR_GAS_URL_HERE</b> ในไฟล์ index.html บน GitHub</small>';
   err.classList.remove('hidden');
 }
 
@@ -2020,7 +2020,7 @@ function handleScanResult(code) {
 // ===== UTILITIES =====
 // ===== API call ไปยัง Google Apps Script =====
 function call(fn, ...args) {
-  if (!CONFIG.GAS_URL || CONFIG.GAS_URL === 'https://script.google.com/macros/s/AKfycbztgz-3_22uL7SVQzooMhqBvP8pT0lX20JlleZwbY8LfySqPX-LzmK1xxeJujosZuX9Rg/exec') {
+  if (!CONFIG.GAS_URL || CONFIG.GAS_URL === 'YOUR_GAS_URL_HERE') {
     return Promise.reject(new Error('ยังไม่ได้ตั้งค่า GAS URL'));
   }
   return fetch(CONFIG.GAS_URL, {
